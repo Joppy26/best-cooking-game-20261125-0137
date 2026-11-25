@@ -1,40 +1,80 @@
-// recipes.js — the ingredients on the counter and the dishes customers order.
-// Every dish is a set of ingredients; order does not matter, extras do not count.
+// The warung's ingredients and dishes. A dish is a set of ingredient ids;
+// the plate must hold exactly that set (any order) to serve the order.
 
-const INGREDIENTS = [
-  { id: 'nasi',    name: 'Nasi',    key: '1', color: '#fff8e7', dark: '#d9c49a' },
-  { id: 'ayam',    name: 'Ayam',    key: '2', color: '#e8a34c', dark: '#9c5a1d' },
-  { id: 'telur',   name: 'Telur',   key: '3', color: '#ffd94d', dark: '#c98f1b' },
-  { id: 'sayur',   name: 'Sayur',   key: '4', color: '#7bc96f', dark: '#3e7d32' },
-  { id: 'sambal',  name: 'Sambal',  key: '5', color: '#e23b2e', dark: '#8f1d12' },
-  { id: 'kerupuk', name: 'Kerupuk', key: '6', color: '#f2c14e', dark: '#b07f1e' },
+export const INGREDIENTS = [
+  { id: 'nasi', name: 'Nasi', key: '1', color: '#fff6e0', dark: '#c9b183', hint: 'steamed rice' },
+  { id: 'ayam', name: 'Ayam', key: '2', color: '#f2a594', dark: '#a34a38', hint: 'raw chicken, grill it first' },
+  { id: 'telur', name: 'Telur', key: '3', color: '#ffe9a8', dark: '#c98f2e', hint: 'fried egg' },
+  { id: 'sayur', name: 'Sayur', key: '4', color: '#8fce62', dark: '#3e7a2e', hint: 'greens' },
+  { id: 'sambal', name: 'Sambal', key: '5', color: '#e2483a', dark: '#8f1d14', hint: 'chilli sauce' },
+  { id: 'kerupuk', name: 'Kerupuk', key: '6', color: '#ffd98a', dark: '#b98a2e', hint: 'crackers' },
 ];
 
-const DISHES = [
-  { id: 'nasi-goreng', name: 'Nasi Goreng', needs: ['nasi', 'telur', 'sambal'], price: 100 },
-  { id: 'ayam-geprek', name: 'Ayam Geprek', needs: ['ayam', 'sambal', 'nasi'], price: 120 },
-  { id: 'gado-gado',   name: 'Gado-Gado',   needs: ['sayur', 'telur', 'kerupuk'], price: 110 },
-  { id: 'soto-ayam',   name: 'Soto Ayam',   needs: ['ayam', 'nasi', 'sayur'], price: 130 },
+export const GRILLED_CHICKEN = 'ayambakar';
+
+export const DISHES = [
+  {
+    id: 'ayam-bakar',
+    name: 'Nasi Ayam Bakar',
+    price: 120,
+    needs: ['nasi', 'ayambakar', 'sambal'],
+    blurb: 'smoky chicken',
+  },
+  {
+    id: 'telur-dadar',
+    name: 'Nasi Telur Dadar',
+    price: 100,
+    needs: ['nasi', 'telur', 'sayur'],
+    blurb: 'fluffy omelette',
+  },
+  {
+    id: 'sayur-lodeh',
+    name: 'Nasi Sayur Lodeh',
+    price: 110,
+    needs: ['nasi', 'sayur', 'kerupuk'],
+    blurb: 'coconut veggie',
+  },
+  {
+    id: 'komplit',
+    name: 'Nasi Komplit',
+    price: 150,
+    needs: ['nasi', 'ayambakar', 'telur', 'kerupuk'],
+    blurb: 'all in one',
+  },
+  {
+    id: 'pedas',
+    name: 'Nasi Pedas',
+    price: 130,
+    needs: ['nasi', 'sambal', 'telur', 'sayur'],
+    blurb: 'extra hot',
+  },
 ];
 
-function ingredientById(id) {
-  return INGREDIENTS.find((item) => item.id === id);
+export function ingredientById(id) {
+  if (id === GRILLED_CHICKEN) {
+    return { id: GRILLED_CHICKEN, name: 'Ayam Bakar', key: '', color: '#c97b3a', dark: '#6e3c14', hint: 'grilled chicken' };
+  }
+  return INGREDIENTS.find((item) => item.id === id) || null;
 }
 
-function dishById(id) {
-  return DISHES.find((dish) => dish.id === id);
+export function dishById(id) {
+  return DISHES.find((dish) => dish.id === id) || null;
 }
 
-/** True when the plate holds exactly the dish's ingredients, no more and no less. */
-function plateMatchesDish(plate, dish) {
+export function plateMatchesDish(plate, dish) {
   if (plate.length !== dish.needs.length) return false;
-  return dish.needs.every((need) => plate.includes(need));
+  const sortedPlate = plate.slice().sort();
+  const sortedNeeds = dish.needs.slice().sort();
+  for (let index = 0; index < sortedPlate.length; index += 1) {
+    if (sortedPlate[index] !== sortedNeeds[index]) return false;
+  }
+  return true;
 }
 
-/** The first active order the plate satisfies, or null. */
-function findMatchingOrder(plate, orders) {
-  for (const order of orders) {
-    if (plateMatchesDish(plate, order.dish)) return order;
+export function findMatchingOrder(plate, orders) {
+  for (let index = 0; index < orders.length; index += 1) {
+    const dish = dishById(orders[index].dishId);
+    if (dish && plateMatchesDish(plate, dish)) return orders[index];
   }
   return null;
 }
